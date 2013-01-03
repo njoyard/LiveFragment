@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LiveFragment test runner</title>
+    <link rel="stylesheet" href="lib/jasmine/jasmine.css">
+</head>
+<body>
+    <script src="lib/jasmine/jasmine.js"></script>
+    <script src="lib/jasmine/jasmine-html.js"></script>
+    <script src="lib/requirejs/require.js"></script>
+    
+    <script>
+        require({
+            baseUrl: 'spec',
+            paths: {
+            	'livefragment': '../../livefragment'
+            },
+            waitSeconds: 3600
+        });
+
+        require(
+            ['fragments', 'tests'],
+            function(fragments, tests){
+            	/* Describe tests */
+				Object.keys(tests).forEach(function(test) {
+					describe(test, function() {
+						Object.keys(fragments).forEach(function(category) {
+							Object.keys(fragments[category]).forEach(function(situation) {
+								it(
+									category + " - " + situation,
+									tests[test].bind(fragments[category][situation])
+								);
+							});
+						});
+					});
+				});
+            
+            	/* Run Jasmine */
+                jasmine.getEnv().addReporter(new jasmine.TrivialReporter());
+                jasmine.getEnv().execute();
+            }
+        );
+    </script>
+    
+    <div class="empty"></div>
+    <div class="full"><div class="child0"></div><div class="child1"></div><div class="child2"></div><div class="child3"></div><div class="child4"></div><div class="child5"></div><div class="child6"></div><div class="child7"></div><div class="child8"></div><div class="child9"></div></div>
+</body>
+</html>
