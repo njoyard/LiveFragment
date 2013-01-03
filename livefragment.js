@@ -23,6 +23,9 @@
 	 *  subset must be contiguous (and it may be an Array or a NodeList).
 	 */
 	LiveFragment = function(parent, nodes, prev, next) {
+		prev = prev || null;
+		next = next || null;
+	
 		if (typeof nodes === 'undefined') {
 			this.childNodes = slice.call(parent.childNodes);
 			this.previousSibling = null;
