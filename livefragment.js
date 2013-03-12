@@ -2,7 +2,16 @@
 	var isAMD = typeof global.define === 'function' && global.define.amd,
 		slice = Array.prototype.slice,
 		DOCUMENT_FRAGMENT_NODE = 11,
-		LiveFragment, previous;
+		_DOMException, LiveFragment, previous;
+
+	/* Browser vendors: please allow instanciating DOMExceptions ! */
+	_DOMException = function(code, name, message) {
+		this.code = code;
+		this.name = name;
+		this.message = message;
+	};
+	_DOMException.prototype = (DOMException || Error).prototype;
+
 	
 	/*
 	 * LiveFragment object; used to represent a "live"-DocumentFragment.
@@ -126,7 +135,7 @@
 			index = this.childNodes.indexOf(refNode);
 			
 			if (index === -1) {
-				throw new Error("Cannot find reference node");
+				throw new _DOMException(8, "NotFoundError", "NotFoundError: DOM Exception 8. An attempt was made to reference a node in a context where it does not exist.");
 			}
 			
 			this.parentNode.insertBefore(newNode, refNode);
@@ -140,7 +149,7 @@
 			var index = this.childNodes.indexOf(node);
 			
 			if (index === -1) {
-				throw new Error("Cannot remove node");
+				throw new _DOMException(8, "NotFoundError", "NotFoundError: DOM Exception 8. An attempt was made to reference a node in a context where it does not exist.");
 			}
 			
 			this.parentNode.removeChild(node);
@@ -167,7 +176,7 @@
 			var index = this.childNodes.indexOf(newNode);
 			
 			if (index === -1) {
-				throw new Error("Cannot replace node");
+				throw new _DOMException(8, "NotFoundError", "NotFoundError: DOM Exception 8. An attempt was made to reference a node in a context where it does not exist.");
 			}
 			
 			this.parentNode.replaceChild(newNode, oldNode);
