@@ -1,8 +1,10 @@
 define(['livefragment'], function(LiveFragment) {
+	/* Create a LiveFragment from a definition in `fragments` */
 	var createFragment = function(args) {
 		return new LiveFragment(args[0], args[1], args[2], args[3]);
 	};
 	
+	/* Return expected LiveFragment property values from a definition in `fragments` */
 	var getExpectedValues = function(args) {
 		var parent = args[0],
 			children = args[1],
@@ -35,7 +37,13 @@ define(['livefragment'], function(LiveFragment) {
 		};
 	};
 
-	
+	/* Check `node` relations within `fragment`.
+		It is expected to be at `position`, following `previous` (unless null) and
+		preceding `next` (unless null).  If specified, those siblings must also be
+		in the fragment.  When one of them is null, it means `node` is either at
+		the beginning or end of the fragment, and thus we test for relations with
+		the fragment siblings directly.
+	 */
 	var checkNodeRelations = function(fragment, node, position, previous, next) {
 		// Check hasChildNodes()
 		expect( fragment.hasChildNodes() ).toBe( true );
@@ -191,7 +199,7 @@ define(['livefragment'], function(LiveFragment) {
 		},
 
 		"LiveFragment#insertBefore(unknown reference node) throws DOMException 8": function() {
-			var fragment = createFragment("this"),
+			var fragment = createFragment(this),
 				node = document.createElement("div"),
 				ref = document.createElement("div"),
 				exc;
@@ -207,11 +215,15 @@ define(['livefragment'], function(LiveFragment) {
 			}
 
 			expect( exc instanceof DOMException ).toBe( true );
+			expect( exc instanceof Error ).toBe( true );
 			expect( exc.code ).toBe( 8 );
 			expect( exc.name ).toBe( "NotFoundError" );
 
 			ref.parentNode.removeChild(ref);
-		}
+		},
 
+		"LiveFragment#removeChild()": function() {
+			var fragment = createFragment(this);
+		}
 	};
 });

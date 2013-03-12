@@ -2,6 +2,9 @@ define(function() {
 	var full = document.querySelector(".full"),
 		empty = document.querySelector(".empty");
 	
+	/* Categorized fragment definitions to run tests against.
+		Each definition is basically an array containing the arguments to pass
+		to the LiveFragment constructor */
 	return {
 		"empty fragment": {
 			"from existing empty node": [empty],

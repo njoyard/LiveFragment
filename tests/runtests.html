@@ -21,14 +21,19 @@
         require(
             ['fragments', 'tests'],
             function(fragments, tests){
-            	/* Describe tests */
+            	/* Describe tests.
+					We have several categories in `fragments`, each of which contain
+					several fragment defitions.  Each test in `tests` must be run
+					against every fragment definition.  The definition for fragments
+					is passed as `this` to test runner functions.
+				 */
 				Object.keys(tests).forEach(function(test) {
 					describe(test, function() {
 						Object.keys(fragments).forEach(function(category) {
-							Object.keys(fragments[category]).forEach(function(situation) {
+							Object.keys(fragments[category]).forEach(function(definition) {
 								it(
-									category + " - " + situation,
-									tests[test].bind(fragments[category][situation])
+									category + " - " + definition,
+									tests[test].bind(fragments[category][definition])
 								);
 							});
 						});
