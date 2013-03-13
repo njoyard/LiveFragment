@@ -199,36 +199,40 @@
 		
 		/* Extend fragment to adjacent node */
 		extend: function(node) {
-			if (node === this.nextSibling) {
-				this.childNodes.push(this.nextSibling);
-				this.nextSibling = this.nextSibling.nextSibling;
-				return;
+			if (node) {
+				if (node === this.nextSibling) {
+					this.childNodes.push(this.nextSibling);
+					this.nextSibling = this.nextSibling.nextSibling;
+					return;
+				}
+				
+				if (node === this.previousSibling) {
+					this.childNodes.unshift(this.previousSibling);
+					this.previousSibling = this.previousSibling.previousSibling;
+					return;
+				}
 			}
 			
-			if (node === this.previousSibling) {
-				this.childNodes.unshift(this.previousSibling);
-				this.previousSibling = this.previousSibling.previousSibling;
-				return;
-			}
-			
-			throw new Error("Cannot extend to non-adjacent node");
+			throw new DOMException_(8, "NotFoundError", "NotFoundError: DOM Exception 8");
 		},
 		
 		/* Shrink fragment by removing extremal node */
 		shrink: function(node) {
-			if (node === this.firstChild) {
-				this.childNodes.shift();
-				this.previousSibling = node;
-				return;
+			if (node) {
+				if (node === this.firstChild) {
+					this.childNodes.shift();
+					this.previousSibling = node;
+					return;
+				}
+				
+				if (node === this.lastChild) {
+					this.childNodes.pop();
+					this.nextSibling = node;
+					return;
+				}
 			}
 			
-			if (node === this.lastChild) {
-				this.childNodes.pop();
-				this.nextSibling = node;
-				return;
-			}
-			
-			throw new Error("Cannot shrink by non-extremal node");
+			throw new DOMException_(8, "NotFoundError", "NotFoundError: DOM Exception 8");
 		},
 		
 		/* Empty LiveFragment and return a DocumentFragment with all nodes.

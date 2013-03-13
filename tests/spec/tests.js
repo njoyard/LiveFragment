@@ -78,6 +78,23 @@ define(['livefragment'], function(LiveFragment) {
 		// Check relations with parent node
 		expect( node.parentNode ).toBe( fragment.parentNode );
 	};
+	
+	/* Check if `run` throws given DOMException */
+	var expectDOMException = function(code, name, run) {
+		var exc;
+		
+		try {
+			run();
+		} catch(e) {
+			exc = e;
+		}
+
+		expect( exc instanceof DOMException ).toBe( true );
+		expect( exc instanceof Error ).toBe( true );
+		expect( exc.code ).toBe( code );
+		expect( exc.name ).toBe( name );
+		expect( exc.message ).toBe( name + ": DOM Exception " + code );
+	}
 
 		
 	return {
@@ -202,23 +219,16 @@ define(['livefragment'], function(LiveFragment) {
 		"LiveFragment#insertBefore(unknown reference node) throws DOMException 8": function() {
 			var fragment = createFragment(this),
 				node = document.createElement("div"),
-				ref = document.createElement("div"),
-				exc;
+				ref = document.createElement("div");
 
 			node.className = "appended";
 			ref.className = "reference";
 
 			document.body.appendChild(ref);
-			try {
+			
+			expectDOMException(8, "NotFoundError", function() {
 				fragment.insertBefore(node, ref);
-			} catch(e) {
-				exc = e;
-			}
-
-			expect( exc instanceof DOMException ).toBe( true );
-			expect( exc instanceof Error ).toBe( true );
-			expect( exc.code ).toBe( 8 );
-			expect( exc.name ).toBe( "NotFoundError" );
+			});
 
 			ref.parentNode.removeChild(ref);
 		},
@@ -250,17 +260,10 @@ define(['livefragment'], function(LiveFragment) {
 
 			ref.className = "reference";
 			document.body.appendChild(ref);
-
-			try {
+			
+			expectDOMException(8, "NotFoundError", function() {
 				fragment.removeChild(ref);
-			} catch(e) {
-				exc = e;
-			}
-
-			expect( exc instanceof DOMException ).toBe( true );
-			expect( exc instanceof Error ).toBe( true );
-			expect( exc.code ).toBe( 8 );
-			expect( exc.name ).toBe( "NotFoundError" );
+			});
 			
 			ref.parentNode.removeChild(ref);
 		},
@@ -318,18 +321,101 @@ define(['livefragment'], function(LiveFragment) {
 			
 			document.body.appendChild(ref);
 			
-			try {
+			expectDOMException(8, "NotFoundError", function() {
 				fragment.replaceChild(node, ref);
-			} catch(e) {
-				exc = e;
-			}
-
-			expect( exc instanceof DOMException ).toBe( true );
-			expect( exc instanceof Error ).toBe( true );
-			expect( exc.code ).toBe( 8 );
-			expect( exc.name ).toBe( "NotFoundError" );
+			});
 			
 			ref.parentNode.removeChild(ref);
+		},
+		
+		"LiveFragment#empty()": function() {
+			var fragment = createFragment(this),
+				childNodes = [].slice.call(fragment.childNodes);
+				
+			fragment.empty();
+			
+			expect( fragment.hasChildNodes() ).toBe( false );
+			expect( fragment.childNodes.length ).toBe( 0 );
+			childNodes.forEach(function(child) {
+				expect( child.parentNode ).toBe( null );
+			});
+			
+			childNodes.forEach(function(child) {
+				fragment.appendChild(child);
+			});
+		},
+		
+		"LiveFragment#extend(nextSibling)": function() {
+			var fragment = createFragment(this),
+				lastChild = fragment.lastChild,
+				nextSibling = fragment.nextSibling,
+				children = fragment.childNodes.length;
+		
+			if (nextSibling) {
+				fragment.extend(nextSibling);
+				checkNodeRelations(fragment, nextSibling, children, lastChild, null);
+			}
+		},
+		
+		"LiveFragment#extend(previousSibling)": function() {
+			var fragment = createFragment(this),
+				firstChild = fragment.firstChild,
+				previousSibling = fragment.previousSibling;
+		
+			if (previousSibling) {
+				fragment.extend(previousSibling);
+				checkNodeRelations(fragment, previousSibling, 0, null, firstChild);
+			}
+		},
+		
+		"LiveFragment#extend(child node) throws DOMException 8": function() {
+			var fragment = createFragment(this),
+				firstChild = fragment.firstChild;
+			
+			expectDOMException(8, "NotFoundError", function() {
+				fragment.extend(firstChild);
+			});
+		},
+		
+		"LiveFragment#extend(node outside parent) throws DOMExeption 8": function() {
+			var fragment = createFragment(this),
+				node = document.createElement("div");
+			
+			node.className = "reference";
+			document.body.appendChild(node);
+			
+			expectDOMException(8, "NotFoundError", function() {
+				fragment.extend(node);
+			});
+			
+			node.parentNode.removeChild(node);
+		},
+		
+		"LiveFragment#extend(invalid sibling) throws DOMException 8": function() {
+			var fragment = createFragment(this),
+				node = document.createElement("div");
+				
+			node.className = "invalidSibling";
+			
+			if (fragment.nextSibling !== null) {
+				fragment.parentNode.appendChild(node);
+				
+				expectDOMException(8, "NotFoundError", function() {
+					fragment.extend(node);
+				});
+				
+				node.parentNode.removeChild(node);
+			}
+			
+			if (fragment.previousSibling !== null) {
+				fragment.parentNode.insertBefore(node, fragment.parentNode.firstChild);
+				
+				expectDOMException(8, "NotFoundError", function() {
+					fragment.extend(node);
+				});
+				
+				node.parentNode.removeChild(node);
+			}
 		}
 	};
 });
