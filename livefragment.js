@@ -1,16 +1,19 @@
+/*jshint es5:true */
+/*global DOMException */
 (function(global) {
-	var isAMD = typeof global.define === 'function' && global.define.amd,
-		slice = Array.prototype.slice,
+	"use strict";
+
+	var slice = Array.prototype.slice,
 		DOCUMENT_FRAGMENT_NODE = 11,
-		_DOMException, LiveFragment, previous;
+		DOMException_, LiveFragment, previous;
 
 	/* Browser vendors: please allow instanciating DOMExceptions ! */
-	_DOMException = function(code, name, message) {
+	DOMException_ = function DOMException_(code, name, message) {
 		this.code = code;
 		this.name = name;
 		this.message = message;
 	};
-	_DOMException.prototype = (DOMException || Error).prototype;
+	DOMException_.prototype = (DOMException || Error).prototype;
 
 	
 	/*
@@ -31,7 +34,7 @@
 	 *  creates a LiveFragment holding a subset of child nodes from 'node'.  The
 	 *  subset must be contiguous (and it may be an Array or a NodeList).
 	 */
-	LiveFragment = function(parent, nodes, prev, next) {
+	LiveFragment = function LiveFragment(parent, nodes, prev, next) {
 		prev = prev || null;
 		next = next || null;
 	
@@ -42,9 +45,9 @@
 		} else {
 			if (nodes.length === 0) {
 				/* If prev is null, next must be firstChild, which means an
-				   empty LiveFragment at the beginning of parent. Same thing if
-				   next is null. Corollary: prev and next can be null if parent
-				   is empty. */
+					empty LiveFragment at the beginning of parent. Same thing if
+					next is null. Corollary: prev and next can be null if parent
+					is empty. */
 				if ((!prev && next !== parent.firstChild) ||
 					(!next && prev !== parent.lastChild)) {
 					throw new Error("Cannot find adjacent siblings");
@@ -75,7 +78,7 @@
 
 	LiveFragment.prototype = {
 		/* Append node to fragment, removing it from its parent first.
-		   Can be called with a DocumentFragment or a LiveFragment */
+			Can be called with a DocumentFragment or a LiveFragment */
 		appendChild: function(node) {
 			if (node instanceof LiveFragment) {
 				node = node.getDocumentFragment();
@@ -135,7 +138,7 @@
 			index = this.childNodes.indexOf(refNode);
 			
 			if (index === -1) {
-				throw new _DOMException(8, "NotFoundError", "NotFoundError: DOM Exception 8. An attempt was made to reference a node in a context where it does not exist.");
+				throw new DOMException_(8, "NotFoundError",	"NotFoundError: DOM Exception 8");
 			}
 			
 			this.parentNode.insertBefore(newNode, refNode);
@@ -149,7 +152,7 @@
 			var index = this.childNodes.indexOf(node);
 			
 			if (index === -1) {
-				throw new _DOMException(8, "NotFoundError", "NotFoundError: DOM Exception 8. An attempt was made to reference a node in a context where it does not exist.");
+				throw new DOMException_(8, "NotFoundError",	"NotFoundError: DOM Exception 8");
 			}
 			
 			this.parentNode.removeChild(node);
@@ -173,10 +176,10 @@
 		
 		/* Replace node in fragment */
 		replaceChild: function(newNode, oldNode) {
-			var index = this.childNodes.indexOf(newNode);
+			var index = this.childNodes.indexOf(oldNode);
 			
 			if (index === -1) {
-				throw new _DOMException(8, "NotFoundError", "NotFoundError: DOM Exception 8. An attempt was made to reference a node in a context where it does not exist.");
+				throw new DOMException_(8, "NotFoundError", "NotFoundError: DOM Exception 8");
 			}
 			
 			this.parentNode.replaceChild(newNode, oldNode);
@@ -229,9 +232,9 @@
 		},
 		
 		/* Empty LiveFragment and return a DocumentFragment with all nodes.
-		   Useful to perform operations on nodes while detached from the
-		   document.  Call LiveFragment#appendChild with the DocumentFragment
-		   to reattach nodes.  Useless when LiveFragment is empty. */
+			Useful to perform operations on nodes while detached from the
+			document.  Call LiveFragment#appendChild with the DocumentFragment
+			to reattach nodes.  Useless when LiveFragment is empty. */
 		getDocumentFragment: function() {
 			var frag = this.ownerDocument.createDocumentFragment();
 			this.childNodes.forEach(frag.appendChild, frag);
@@ -252,8 +255,8 @@
 		}
 	};
 		
-	if (isAMD) {
-		define(function() {
+	if (typeof global.define === 'function' && global.define.amd) {
+		global.define(function() {
 			return LiveFragment;
 		});
 	} else {

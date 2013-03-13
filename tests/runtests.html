@@ -22,10 +22,13 @@
             ['fragments', 'tests'],
             function(fragments, tests){
             	/* Describe tests.
+
 					We have several categories in `fragments`, each of which contain
 					several fragment defitions.  Each test in `tests` must be run
 					against every fragment definition.  The definition for fragments
 					is passed as `this` to test runner functions.
+
+					I wish there was a way to write this with less nested functions.
 				 */
 				Object.keys(tests).forEach(function(test) {
 					describe(test, function() {
@@ -47,7 +50,8 @@
         );
     </script>
     
-    <div class="empty"></div>
+    <!-- Those are the nodes we create LiveFragments from -->
+	<div class="empty"></div>
     <div class="full"><div class="child0"></div><div class="child1"></div><div class="child2"></div><div class="child3"></div><div class="child4"></div><div class="child5"></div><div class="child6"></div><div class="child7"></div><div class="child8"></div><div class="child9"></div></div>
 </body>
 </html>

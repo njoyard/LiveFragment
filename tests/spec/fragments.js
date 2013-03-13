@@ -1,3 +1,4 @@
+/*global define, document */
 define(function() {
 	var full = document.querySelector(".full"),
 		empty = document.querySelector(".empty");

@@ -1,3 +1,4 @@
+/*global define, expect, document, DOMException */
 define(['livefragment'], function(LiveFragment) {
 	/* Create a LiveFragment from a definition in `fragments` */
 	var createFragment = function(args) {
@@ -223,7 +224,112 @@ define(['livefragment'], function(LiveFragment) {
 		},
 
 		"LiveFragment#removeChild()": function() {
-			var fragment = createFragment(this);
+			var fragment = createFragment(this),
+				firstChild = fragment.firstChild,
+				nextSibling, previousSibling, removed;
+
+			if (firstChild) {
+				previousSibling = firstChild.previousSibling;
+				nextSibling = firstChild.nextSibling;
+
+				removed = fragment.removeChild(firstChild);
+
+				expect( removed ).toBe( firstChild );
+				expect( removed.parentNode ).toBe( null );
+				expect( removed.nextSibling ).toBe( null );
+				expect( removed.previousSibling ).toBe( null );
+				
+				fragment.parentNode.insertBefore(removed, fragment.firstChild);
+			}
+		},
+		
+		"LiveFragment#removeChild(unknown reference node) throws DOMException 8": function() {
+			var fragment = createFragment(this),
+				ref = document.createElement("div"),
+				exc;
+
+			ref.className = "reference";
+			document.body.appendChild(ref);
+
+			try {
+				fragment.removeChild(ref);
+			} catch(e) {
+				exc = e;
+			}
+
+			expect( exc instanceof DOMException ).toBe( true );
+			expect( exc instanceof Error ).toBe( true );
+			expect( exc.code ).toBe( 8 );
+			expect( exc.name ).toBe( "NotFoundError" );
+			
+			ref.parentNode.removeChild(ref);
+		},
+		
+		"LiveFragment#replaceChild(new node)": function() {
+			var fragment = createFragment(this),
+				node = document.createElement("div"),
+				replaced = fragment.firstChild,
+				next, result;
+				
+			node.className = "replacement";
+			
+			if (replaced) {
+				next = replaced.nextSibling;
+				result = fragment.replaceChild(node, replaced);
+			
+				expect( result ).toBe( replaced );
+				expect( replaced.parentNode ).toBe( null );
+				checkNodeRelations(fragment, node, 0, null, next);
+				
+				node.parentNode.replaceChild(replaced, node);
+			}
+		},
+		
+		"LiveFragment#replaceChild(node already in document)": function() {
+			var fragment = createFragment(this),
+				node = document.createElement("div"),
+				replaced = fragment.firstChild,
+				next, result;
+				
+			node.className = "replacement";
+			
+			if (replaced) {
+				document.body.appendChild(node);
+				
+				next = replaced.nextSibling;
+				result = fragment.replaceChild(node, replaced);
+			
+				expect( result ).toBe( replaced );
+				expect( replaced.parentNode ).toBe( null );
+				checkNodeRelations(fragment, node, 0, null, next);
+				
+				node.parentNode.replaceChild(replaced, node);
+			}
+		},
+		
+		"LiveFragment#replaceChild(unknown reference node) throws DOMException 8": function() {
+			var fragment = createFragment(this),
+				node = document.createElement("div"),
+				ref = document.createElement("div"),
+				exc;
+				
+			node.className = "replacement";
+			ref.className = "reference";
+			
+			document.body.appendChild(ref);
+			
+			try {
+				fragment.replaceChild(node, ref);
+			} catch(e) {
+				exc = e;
+			}
+
+			expect( exc instanceof DOMException ).toBe( true );
+			expect( exc instanceof Error ).toBe( true );
+			expect( exc.code ).toBe( 8 );
+			expect( exc.name ).toBe( "NotFoundError" );
+			
+			ref.parentNode.removeChild(ref);
 		}
 	};
 });
