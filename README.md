@@ -31,7 +31,7 @@ var myFragment = new LiveFragment(parent);
 In this case, `myFragment` holds all nodes that were children of `parent` at the
 time of its creation.  As `parent` is the parentNode of all children of the fragment,
 we also call it the parentNode of `myFragment`.  Note that adding nodes to the parent
-will _not_ add them to `myFragment`.
+will _not_ add them to `myFragment`, but the reverse will.
 
 An other way of creating a LiveFragment is by passing it a contiguous slice of its
 parentNode children:
@@ -137,6 +137,7 @@ Caveats
 
 * `LiveFragment#childNodes` should not be modified directly.  
 * No outside operation (to be defined)
+* Not real DOM exceptions
 
 Additional helper methods
 -------------------------
@@ -150,50 +151,46 @@ calling `LiveFragment#removeChild()` on every child node.
 
 This method extends a LiveFragment to a direct sibling node.  It only works when
 called with either the node that precedes the LiveFragment in its parentNode or the
-node that follows it.
+node that follows it.  Any other argument triggers a NOT_FOUND_ERR DOM exception.
 
 ```
-	+-Parent----------------------+
-	|     +-LiveFragment+         |
-	| [A] | [B] [C] [D] | [E] [F] |
-	|     +-------------+         |
-	+-----------------------------+
-```
+//	+-Parent----------------------+
+//	|     +-LiveFragment+         |
+//	| [A] | [B] [C] [D] | [E] [F] |
+//	|     +-------------+         |
+//	+-----------------------------+
 
-Calling `liveFragment.extend(E)` would result in:
+liveFragment.extend(E);
 
-```
-	+-Parent----------------------+
-	|     +-LiveFragment----+     |
-	| [A] | [B] [C] [D] [E] | [F] |
-	|     +-----------------+     |
-	+-----------------------------+
+//	+-Parent----------------------+
+//	|     +-LiveFragment----+     |
+//	| [A] | [B] [C] [D] [E] | [F] |
+//	|     +-----------------+     |
+//	+-----------------------------+
 ```
 
 ### `LiveFragment#shrink(node)`
 
 This method is the reverse from `#extend()`.  It removes a node from the LiveFragment
 but keeps it in the parentNode.  It only works when called with either the first or
-the last node in the LiveFragment.
+the last node in the LiveFragment.  Any other argument triggers a NOT_FOUND_ERR DOM
+exception.
 
 ```
-	+-Parent----------------------+
-	|     +-LiveFragment----+     |
-	| [A] | [B] [C] [D] [E] | [F] |
-	|     +-----------------+     |
-	+-----------------------------+
-```
+//	+-Parent----------------------+
+//	|     +-LiveFragment----+     |
+//	| [A] | [B] [C] [D] [E] | [F] |
+//	|     +-----------------+     |
+//	+-----------------------------+
 
-Calling `liveFragment.shrink(B)` would result in:
+liveFragment.shrink(B);
 
+//	+-Parent----------------------+
+//	|         +-LiveFragment+     |
+//	| [A] [B] | [C] [D] [E] | [F] |
+//	|         +-------------+     |
+//	+-----------------------------+
 ```
-	+-Parent----------------------+
-	|         +-LiveFragment+     |
-	| [A] [B] | [C] [D] [E] | [F] |
-	|         +-------------+     |
-	+-----------------------------+
-```
-
 
 ### `LiveFragment#getDocumentFragment()`
 
@@ -219,4 +216,5 @@ Plans
   LiveFragment methods)
 * Allow nested LiveFragments
 * More DOM interfaces
-* 
+* Easier constructor syntax
+
