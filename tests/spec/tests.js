@@ -416,6 +416,18 @@ define(['livefragment'], function(LiveFragment) {
 				
 				node.parentNode.removeChild(node);
 			}
+		},
+		
+		"LiveFragment#shrink(firstChild)": function() {
+		},
+		
+		"LiveFragment#shrink(lastChild)": function() {
+		},
+		
+		"LiveFragment#shrink(other child) throws DOMException 8": function() {
+		},
+		
+		"LiveFragment#shrink(unknown node) throws DOMException 8": function() {
 		}
 	};
 });
