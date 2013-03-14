@@ -64,39 +64,159 @@ the end of its parent (or both, if the parent is empty).
 DOM interface
 -------------
 
+### `LiveFragment#parentNode`
+
+Returns the parentNode, which is the parent of all nodes contained in the
+LiveFragment.  This is the node that was used as the first parameter of the
+`LiveFragment` constructor.
+
 ### `LiveFragment#childNodes`
+
+This is an `Array`, not a `NodeList`.  It contains all nodes currently in the
+LiveFragment.
 
 ### `LiveFragment#firstChild`
 
+Returns the first node inside the LiveFragment, or `null` if there are none.
+This is equivalent to `childNodes[0]`.
+
 ### `LiveFragment#lastChild`
+
+Returns the last node inside the LiveFragment, or `null` if there are none.
+This is equivalent to `childNodes[childNodes.length - 1]`.
 
 ### `LiveFragment#previousSibling`
 
+Returns the last node in the parentNode and before the LiveFragment, or `null` if
+there are none. This is equivalent to `firstChild.previousSibling` when there are
+nodes inside the LiveFragment.
+
 ### `LiveFragment#nextSibling`
+
+Returns the first node in the parentNode and after the LiveFragment, or `null` if
+there are none. This is equivalent to `lastChild.nextSibling` when there are nodes
+inside the LiveFragment.
 
 ### `LiveFragment#hasChildNodes()`
 
+Returns `true` if and only if the LiveFragment has children.
+
 ### `LiveFragment#appendChild(node)`
+
+Adds `node` to the end of the LiveFragment, and also to `parentNode`, just before
+`nextSibling`.  `node` is removed from its parent, if it already has one, when doing
+this.  When `node` is a DocumentFragment or another LiveFragment, they are emptied
+in the operation, but the LiveFragment stays in its `parentNode`.
 
 ### `LiveFragment#insertBefore(node, refNode)`
 
+Inserts `node` just before `refNode` or at the end of the LiveFragment if `refNode`
+is `null`.  `node` is also inserted in `parentNode`.  `node` is removed from its
+parent, if it already has one, when doing this.  When `node` is a DocumentFragment
+or another LiveFragment, they are emptied in the operation, but the LiveFragment
+stays in its `parentNode`.
+
+Note that when `refNode` is not `null`, it must be in the LiveFragment, or a
+NOT_FOUND_ERR DOM Exception is thrown.
+
 ### `LiveFragment#removeChild(node)`
+
+Removes `node` from the LiveFragment and also from `parentNode`.  `node` must be in
+the LiveFragment, or a NOT_FOUND_ERR DOM Exception is thrown.
 
 ### `LiveFragment#replaceChild(node, refNode)`
 
+Replaces `refNode` with `node` in the LiveFragment and also in `parentNode`.  `node`
+is removed from its parent, if it already has one, when doing this.
+
+Note that `refNode` must be in the LiveFragment, or a NOT_FOUND_ERR DOM Exception
+is thrown.
+
 Caveats
 -------
+
+* `LiveFragment#childNodes` should not be modified directly.  
+* No outside operation (to be defined)
 
 Additional helper methods
 -------------------------
 
 ### `LiveFragment#empty()`
 
+This method removes all nodes from the LiveFragment and its parentNode, just as
+calling `LiveFragment#removeChild()` on every child node.
+
 ### `LiveFragment#extend(node)`
+
+This method extends a LiveFragment to a direct sibling node.  It only works when
+called with either the node that precedes the LiveFragment in its parentNode or the
+node that follows it.
+
+```
+	+-Parent----------------------+
+	|     +-LiveFragment+         |
+	| [A] | [B] [C] [D] | [E] [F] |
+	|     +-------------+         |
+	+-----------------------------+
+```
+
+Calling `liveFragment.extend(E)` would result in:
+
+```
+	+-Parent----------------------+
+	|     +-LiveFragment----+     |
+	| [A] | [B] [C] [D] [E] | [F] |
+	|     +-----------------+     |
+	+-----------------------------+
+```
 
 ### `LiveFragment#shrink(node)`
 
+This method is the reverse from `#extend()`.  It removes a node from the LiveFragment
+but keeps it in the parentNode.  It only works when called with either the first or
+the last node in the LiveFragment.
+
+```
+	+-Parent----------------------+
+	|     +-LiveFragment----+     |
+	| [A] | [B] [C] [D] [E] | [F] |
+	|     +-----------------+     |
+	+-----------------------------+
+```
+
+Calling `liveFragment.shrink(B)` would result in:
+
+```
+	+-Parent----------------------+
+	|         +-LiveFragment+     |
+	| [A] [B] | [C] [D] [E] | [F] |
+	|         +-------------+     |
+	+-----------------------------+
+```
+
+
 ### `LiveFragment#getDocumentFragment()`
+
+This method removes all nodes from the LiveFragment and its parentNode, and returns
+them inside a newly created DocumentFragment.  This may be useful to extract nodes
+from the document before performing operations on them:
+
+```js
+// Extract nodes from the document
+var extractedNodes = liveFragment.getDocumentFragment()
+
+// Perform heavy operations
+heavyTransformation(extractedNodes);
+
+// Get the transformed nodes back in place
+liveFragment.appendChild(extractedNodes);
+```
 
 Plans
 -----
+
+* Automatic detection of changes made from the outside (i.e. without calling the
+  LiveFragment methods)
+* Allow nested LiveFragments
+* More DOM interfaces
+* 
