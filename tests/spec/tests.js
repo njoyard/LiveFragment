@@ -472,6 +472,25 @@ define(['livefragment'], function(LiveFragment) {
 			});
 			
 			node.parentNode.removeChild(node);
+		},
+		
+		"LiveFragment#getDocumentFragment": function() {
+			var fragment = createFragment(this),
+				children = [].slice.call(fragment.childNodes),
+				result;
+				
+			result = fragment.getDocumentFragment();
+			
+			expect( result.nodeType ).toBe( document.DOCUMENT_FRAGMENT_NODE );
+			expect( result.ownerDocument ).toBe( document );
+			expect( fragment.hasChildNodes() ).toBe( false );
+			
+			children.forEach(function(node) {
+				expect( [].slice.call(fragment.parentNode.childNodes).indexOf(node) ).toBe( -1 );
+				expect( [].slice.call(result.childNodes).indexOf(node) ).toNotBe( -1 );
+			});
+			
+			fragment.appendChild(result);
 		}
 	};
 });
