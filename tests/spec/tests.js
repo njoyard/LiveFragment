@@ -419,15 +419,59 @@ define(['livefragment'], function(LiveFragment) {
 		},
 		
 		"LiveFragment#shrink(firstChild)": function() {
+			var fragment = createFragment(this),
+				firstChild = fragment.firstChild;
+				
+			if (firstChild) {
+				fragment.shrink(firstChild);
+				
+				expect( fragment.childNodes.indexOf(firstChild) ).toBe( -1 );
+				expect( fragment.previousSibling ).toBe( firstChild );
+				
+				if (fragment.hasChildNodes()) {
+					expect( fragment.firstChild ).toBe( firstChild.nextSibling );
+				}
+			}
 		},
 		
 		"LiveFragment#shrink(lastChild)": function() {
+			var fragment = createFragment(this),
+				lastChild = fragment.lastChild;
+				
+			if (lastChild) {
+				fragment.shrink(lastChild);
+				
+				expect( fragment.childNodes.indexOf(lastChild) ).toBe( -1 );
+				expect( fragment.nextSibling ).toBe( lastChild );
+				
+				if (fragment.hasChildNodes()) {
+					expect( fragment.lastChild ).toBe( lastChild.previousSibling );
+				}
+			}
 		},
 		
 		"LiveFragment#shrink(other child) throws DOMException 8": function() {
+			var fragment = createFragment(this);
+			
+			if (fragment.childNodes.length > 2) {
+				expectDOMException(8, "NotFoundError", function() {
+					fragment.shrink(fragment.childNodes[1]);
+				});
+			}
 		},
 		
 		"LiveFragment#shrink(unknown node) throws DOMException 8": function() {
+			var fragment = createFragment(this),
+				node = document.createElement("div");
+				
+			node.className = "unknown";
+			document.body.appendChild(node);
+			
+			expectDOMException(8, "NotFoundError", function() {
+				fragment.shrink(node);
+			});
+			
+			node.parentNode.removeChild(node);
 		}
 	};
 });
