@@ -94,7 +94,7 @@ define(['livefragment'], function(LiveFragment) {
 		expect( exc.code ).toBe( code );
 		expect( exc.name ).toBe( name );
 		expect( exc.message ).toBe( name + ": DOM Exception " + code );
-	}
+	};
 
 		
 	return {
