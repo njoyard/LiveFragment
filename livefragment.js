@@ -39,7 +39,7 @@
 		next = next || null;
 	
 		if (typeof nodes === 'undefined') {
-			this.childNodes = slice.call(parent.childNodes);
+			this._childNodes = slice.call(parent.childNodes);
 			this.previousSibling = null;
 			this.nextSibling = null;
 		} else {
@@ -62,17 +62,17 @@
 				this.nextSibling = nodes[nodes.length - 1].nextSibling;
 			}
 			
-			this.childNodes = slice.call(nodes);
+			this._childNodes = slice.call(nodes);
 		}
 		
 		if (parent instanceof LiveFragment) {
-			this.parentNode = parent.parentNode;
+			this._parentNode = parent.parentNode;
 		} else {
 			// TODO check validity of parent
-			this.parentNode = parent;
+			this._parentNode = parent;
 		}
 		
-		this.ownerDocument = this.parentNode.ownerDocument;
+		this.ownerDocument = this._parentNode.ownerDocument;
 		this.nodeType = DOCUMENT_FRAGMENT_NODE;
 	};
 
@@ -97,12 +97,12 @@
 			this._removeChildNoFail(node);
 		
 			if (this.nextSibling) {
-				this.parentNode.insertBefore(node, this.nextSibling);
+				this._parentNode.insertBefore(node, this.nextSibling);
 			} else {
-				this.parentNode.appendChild(node);
+				this._parentNode.appendChild(node);
 			}
 			
-			this.childNodes.push(node);
+			this._childNodes.push(node);
 			
 			return node;
 		},
@@ -135,79 +135,79 @@
 			
 			this._removeChildNoFail(newNode);
 			
-			index = this.childNodes.indexOf(refNode);
+			index = this._childNodes.indexOf(refNode);
 			
 			if (index === -1) {
 				throw new DOMException_(8, "NotFoundError",	"NotFoundError: DOM Exception 8");
 			}
 			
-			this.parentNode.insertBefore(newNode, refNode);
-			this.childNodes.splice(index, 0, newNode);
+			this._parentNode.insertBefore(newNode, refNode);
+			this._childNodes.splice(index, 0, newNode);
 			
 			return newNode;
 		},
 		
 		/* Remove node from fragment */
 		removeChild: function(node) {
-			var index = this.childNodes.indexOf(node);
+			var index = this._childNodes.indexOf(node);
 			
 			if (index === -1) {
 				throw new DOMException_(8, "NotFoundError",	"NotFoundError: DOM Exception 8");
 			}
 			
-			this.parentNode.removeChild(node);
-			this.childNodes.splice(index, 1);
+			this._parentNode.removeChild(node);
+			this._childNodes.splice(index, 1);
 			
 			return node;
 		},
 		
 		_removeChildNoFail: function(node) {
-			var index = this.childNodes.indexOf(node);
+			var index = this._childNodes.indexOf(node);
 			
 			if (index === -1) {
 				return;
 			}
 			
-			this.parentNode.removeChild(node);
-			this.childNodes.splice(index, 1);
+			this._parentNode.removeChild(node);
+			this._childNodes.splice(index, 1);
 			
 			return node;
 		},
 		
 		/* Replace node in fragment */
 		replaceChild: function(newNode, oldNode) {
-			var index = this.childNodes.indexOf(oldNode);
+			var index = this._childNodes.indexOf(oldNode);
 			
 			if (index === -1) {
 				throw new DOMException_(8, "NotFoundError", "NotFoundError: DOM Exception 8");
 			}
 			
-			this.parentNode.replaceChild(newNode, oldNode);
-			this.childNodes.splice(index, 1, newNode);
+			this._parentNode.replaceChild(newNode, oldNode);
+			this._childNodes.splice(index, 1, newNode);
 			
 			return oldNode;
 		},
 		
 		/* Remove all nodes from fragment */
 		empty: function() {
-			this.childNodes.forEach(function(node) {
-				this.parentNode.removeChild(node);
+			this._childNodes.forEach(function(node) {
+				this._parentNode.removeChild(node);
 			}, this);
 			
-			this.childNodes = [];
+			this._childNodes = [];
 		},
 		
 		/* Extend fragment to adjacent node */
 		extend: function(node) {
 			if (node) {
 				if (node === this.nextSibling) {
-					this.childNodes.push(this.nextSibling);
+					this._childNodes.push(this.nextSibling);
 					this.nextSibling = this.nextSibling.nextSibling;
 					return;
 				}
 				
 				if (node === this.previousSibling) {
-					this.childNodes.unshift(this.previousSibling);
+					this._childNodes.unshift(this.previousSibling);
 					this.previousSibling = this.previousSibling.previousSibling;
 					return;
 				}
@@ -220,13 +220,13 @@
 		shrink: function(node) {
 			if (node) {
 				if (node === this.firstChild) {
-					this.childNodes.shift();
+					this._childNodes.shift();
 					this.previousSibling = node;
 					return;
 				}
 				
 				if (node === this.lastChild) {
-					this.childNodes.pop();
+					this._childNodes.pop();
 					this.nextSibling = node;
 					return;
 				}
@@ -241,23 +241,31 @@
 			to reattach nodes.  Useless when LiveFragment is empty. */
 		getDocumentFragment: function() {
 			var frag = this.ownerDocument.createDocumentFragment();
-			this.childNodes.forEach(frag.appendChild, frag);
-			this.childNodes = [];
+			this._childNodes.forEach(frag.appendChild, frag);
+			this._childNodes = [];
 			return frag;
 		},
 		
-		get firstChild() {
-			return this.childNodes[0] || null;
-		},
-		
-		get lastChild() {
-			return this.childNodes[this.childNodes.length - 1] || null;
-		},
-		
 		hasChildNodes: function() {
-			return this.childNodes.length > 0;
+			return this._childNodes.length > 0;
 		}
 	};
+	
+	LiveFragment.prototype.__defineGetter__("firstChild", function() {
+		return this._childNodes[0] || null;
+	});
+	
+	LiveFragment.prototype.__defineGetter__("lastChild", function() {
+		return this._childNodes[this._childNodes.length - 1] || null;
+	});
+	
+	LiveFragment.prototype.__defineGetter__("childNodes", function() {
+		return this._childNodes;
+	});
+	
+	LiveFragment.prototype.__defineGetter__("parentNode", function() {
+		return this._parentNode;
+	});
 		
 	if (typeof global.define === 'function' && global.define.amd) {
 		global.define(function() {
