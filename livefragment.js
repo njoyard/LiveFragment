@@ -5,15 +5,22 @@
 
 	var slice = Array.prototype.slice,
 		DOCUMENT_FRAGMENT_NODE = 11,
-		DOMException_, LiveFragment, previous;
+		domExceptions,
+		makeDOMException, LiveFragment, previous, privateGetter;
 
 	/* Browser vendors: please allow instanciating DOMExceptions ! */
-	DOMException_ = function DOMException_(code, name, message) {
-		this.code = code;
-		this.name = name;
-		this.message = message;
+	domExceptions = {
+		"8": "NotFoundError",
+		"9": "NotSupportedError"
 	};
-	DOMException_.prototype = (DOMException || Error).prototype;
+	makeDOMException = function makeDOMException(code) {
+		var exc = Object.create(new Error(domExceptions[code] + ": DOM Exception " + code));
+		
+		exc.code = code;
+		exc.name = domExceptions[code];
+		
+		return exc;
+	};
 
 	
 	/*
@@ -22,60 +29,75 @@
 	 * Has the same API as a DocumentFragment, with some additions.  Operations
 	 * on a LiveFragment are propagated to its parent.
 	 *
-	 * new LiveFragment(node)
-	 *  creates a LiveFragment holding all child nodes of 'node'.  Can be used
-	 *  with a "real" node, a DocumentFragment or an other LiveFragment.
+	 * new LiveFragment(parent)
+	 *  creates a LiveFragment holding all child nodes of `parent`.
 	 *
-	 * new LiveFragment(node, [], prevNode, nextNode)
-	 *  creates an empty LiveFragment inside 'node' between 'prevNode' and
-	 *  'nextNode'
+	 * new LiveFragment([nodes])
+	 *  creates a LiveFragment holding all nodes in `nodes`, which must be
+	 *  contiguous and have the same parent
 	 *
-	 * new LiveFragment(node, [nodes...])
-	 *  creates a LiveFragment holding a subset of child nodes from 'node'.  The
-	 *  subset must be contiguous (and it may be an Array or a NodeList).
+	 * new LiveFragment(prevSibling, nextSibling)
+	 *  creates a LiveFragment between `prevSibling` and `nextSibling`.  At least
+	 *  one of the arguments must be non-null, and when they are both present, they
+	 *  must have the same parent and be specified in the right order.
 	 */
-	LiveFragment = function LiveFragment(parent, nodes, prev, next) {
-		prev = prev || null;
-		next = next || null;
-	
-		if (typeof nodes === 'undefined') {
-			this._childNodes = slice.call(parent.childNodes);
-			this.previousSibling = null;
-			this.nextSibling = null;
-		} else {
-			if (nodes.length === 0) {
-				/* If prev is null, next must be firstChild, which means an
-					empty LiveFragment at the beginning of parent. Same thing if
-					next is null. Corollary: prev and next can be null if parent
-					is empty. */
-				if ((!prev && next !== parent.firstChild) ||
-					(!next && prev !== parent.lastChild)) {
-					throw new Error("Cannot find adjacent siblings");
+	LiveFragment = function LiveFragment() {
+		var args = [].slice.call(arguments),
+			valid = false,
+			parent, children, prev, next, node, i, len;
+		
+		if (args.length === 2) {
+			prev = args[0];
+			next = args[1];
+			
+			if (prev || next) {
+				parent = prev ? prev.parentNode : next.parentNode;
+				children = [];
+				node = prev ? prev.nextSibling : parent.firstChild;
+				
+				while (node && node !== next) {
+					children.push(node);
+					node = node.nextSibling;
 				}
-			
-				// TODO check validity of prev/next
-				this.previousSibling = prev;
-				this.nextSibling = next;
-			} else {
-				// TODO check whether nodes are contiguous
-				this.previousSibling = nodes[0].previousSibling;
-				this.nextSibling = nodes[nodes.length - 1].nextSibling;
+				
+				if (node === next) {
+					valid = true;
+				}
 			}
-			
-			this._childNodes = slice.call(nodes);
+		} else if (args.length == 1) {
+			if (typeof args[0].length === 'number' && args[0].length > 0) {
+				children = [].slice.call(args[0]);
+				parent = children[0].parentNode;
+				node = prev = children[0].previousSibling;
+				
+				for (i = 0, len = children.length; i < len; node = children[i++]) {
+					if (node && node.nextSibling !== children[i]) {
+						throw makeDOMException(9);
+					}
+				}
+				
+				next = children[len - 1].nextSibling;
+				valid = true;
+			} else if (typeof args[0].nodeType === 'number') {
+				parent = args[0];
+				children = [].slice.call(parent.childNodes);
+				prev = next = null;
+				valid = true;
+			}
 		}
 		
-		if (parent instanceof LiveFragment) {
-			this._parentNode = parent.parentNode;
-		} else {
-			// TODO check validity of parent
-			this._parentNode = parent;
+		if (!valid) {
+			throw makeDOMException(9);
 		}
 		
-		this.ownerDocument = this._parentNode.ownerDocument;
-		this.nodeType = DOCUMENT_FRAGMENT_NODE;
+		this._parentNode = parent;
+		this._childNodes = children;
+		this._previousSibling = prev || null;
+		this._nextSibling = next || null;
+		this._ownerDocument = this._parentNode.ownerDocument;
+		this._nodeType = DOCUMENT_FRAGMENT_NODE;
 	};
-
+	
 	LiveFragment.prototype = {
 		/* Append node to fragment, removing it from its parent first.
 			Can be called with a DocumentFragment or a LiveFragment */
@@ -138,7 +160,7 @@
 			index = this._childNodes.indexOf(refNode);
 			
 			if (index === -1) {
-				throw new DOMException_(8, "NotFoundError",	"NotFoundError: DOM Exception 8");
+				throw makeDOMException(8);
 			}
 			
 			this._parentNode.insertBefore(newNode, refNode);
@@ -152,7 +174,7 @@
 			var index = this._childNodes.indexOf(node);
 			
 			if (index === -1) {
-				throw new DOMException_(8, "NotFoundError",	"NotFoundError: DOM Exception 8");
+				throw makeDOMException(8);
 			}
 			
 			this._parentNode.removeChild(node);
@@ -179,7 +201,7 @@
 			var index = this._childNodes.indexOf(oldNode);
 			
 			if (index === -1) {
-				throw new DOMException_(8, "NotFoundError", "NotFoundError: DOM Exception 8");
+				throw makeDOMException(8);
 			}
 			
 			this._parentNode.replaceChild(newNode, oldNode);
@@ -200,20 +222,20 @@
 		/* Extend fragment to adjacent node */
 		extend: function(node) {
 			if (node) {
-				if (node === this.nextSibling) {
-					this._childNodes.push(this.nextSibling);
-					this.nextSibling = this.nextSibling.nextSibling;
+				if (node === this._nextSibling) {
+					this._childNodes.push(this._nextSibling);
+					this._nextSibling = this._nextSibling.nextSibling;
 					return;
 				}
 				
-				if (node === this.previousSibling) {
-					this._childNodes.unshift(this.previousSibling);
-					this.previousSibling = this.previousSibling.previousSibling;
+				if (node === this._previousSibling) {
+					this._childNodes.unshift(this._previousSibling);
+					this._previousSibling = this._previousSibling.previousSibling;
 					return;
 				}
 			}
 			
-			throw new DOMException_(8, "NotFoundError", "NotFoundError: DOM Exception 8");
+			throw makeDOMException(8);
 		},
 		
 		/* Shrink fragment by removing extremal node */
@@ -221,18 +243,18 @@
 			if (node) {
 				if (node === this.firstChild) {
 					this._childNodes.shift();
-					this.previousSibling = node;
+					this._previousSibling = node;
 					return;
 				}
 				
 				if (node === this.lastChild) {
 					this._childNodes.pop();
-					this.nextSibling = node;
+					this._nextSibling = node;
 					return;
 				}
 			}
 			
-			throw new DOMException_(8, "NotFoundError", "NotFoundError: DOM Exception 8");
+			throw makeDOMException(8);
 		},
 		
 		/* Empty LiveFragment and return a DocumentFragment with all nodes.
@@ -263,8 +285,15 @@
 		return this._childNodes;
 	});
 	
-	LiveFragment.prototype.__defineGetter__("parentNode", function() {
-		return this._parentNode;
+	privateGetter = function(property) {
+		return function() {
+			return this["_" + property];
+		};
+	};
+	
+	["parentNode", "previousSibling", "nextSibling", "ownerDocument",
+		"nodeType"].forEach(function(prop) {
+		LiveFragment.prototype.__defineGetter__(prop, privateGetter(prop));
 	});
 		
 	if (typeof global.define === 'function' && global.define.amd) {
