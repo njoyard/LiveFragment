@@ -31,7 +31,7 @@ var myFragment = new LiveFragment(parent);
 In this case, `myFragment` holds all nodes that were children of `parent` at the
 time of its creation.  As `parent` is the parentNode of all children of the fragment,
 we also call it the parentNode of `myFragment`.  Note that adding nodes to the parent
-will _not_ add them to `myFragment`, but the reverse will.
+will _not_ add them to `myFragment`.
 
 An other way of creating a LiveFragment is by passing it a contiguous slice of its
 parentNode children:
@@ -135,9 +135,18 @@ is thrown.
 Caveats
 -------
 
-* `LiveFragment#childNodes` should not be modified directly.  
-* No outside operation (to be defined)
-* Not real DOM exceptions
+* `LiveFragment#childNodes` should not be modified directly.  Changing the array
+  manually will not propagate the changes to `parentNode`.
+* A LiveFragment cannot (yet) detect operations on nodes made directly on `parentNode`.
+  For instance, a node inserted in the middle of those in a LiveFragment by calling
+  `parentNode.insertBefore()` will not be seen by the LiveFragment.  This should be
+  fixed in a future release.
+* As a corrolary, a single node should not be in 2 or more LiveFragments at the same
+  time.  Operations performed on one LiveFragment will not be seen by the other one.
+* Due to browser limitations (vendors, please fix that), LiveFragment methods do not
+  throw actual DOMException instances, but you can still successfully use
+  `instanceof DOMException` or `.code === DOMException.NOT_FOUND_ERR` on those
+  exceptions.
 
 Additional helper methods
 -------------------------
