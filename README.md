@@ -39,13 +39,13 @@ parentNode children:
 ```js
 var parent = document.querySelector("#i-have-lots-of-children");
 var children = [].slice.call(parent.childNodes, 1, 4);
-var myFragment = new LiveFragment(parent, children);
+var myFragment = new LiveFragment(children);
 ```
 
 Now `myFragment` holds the second to fourth children of `parent`.  Calling
 `myFragment.appendChild(node)` will insert `node` inside `parent`, between the fourth
-and fifth children.  The second argument to the `LiveFragment` constructor can be
-either an `Array` or a `NodeList`.
+and fifth children.  In this case, the argument to the `LiveFragment` constructor can
+be either an `Array` or a `NodeList`.
 
 It is also possible to create an empty LiveFragment inside a node. In this case, you
 must specify where the LiveFragment resides inside its parent:
@@ -53,13 +53,12 @@ must specify where the LiveFragment resides inside its parent:
 ```js
 var parent = document.querySelector("#i-have-lots-of-children");
 var child = parent.querySelector(".someChild");
-var myFragment = new LiveFragment(parent, [], child, child.nextSibling);
+var myFragment = new LiveFragment(child, child.nextSibling);
 ```
 
 Here, calling `myFragment.appendChild(node)` will insert `node` inside `parent` between
-`child` and its next sibling.  Note that when creating an empty LiveFragment, the third
-and fourth arguments can be `null` when the LiveFragment resides at the beginning or at
-the end of its parent (or both, if the parent is empty).
+`child` and its next sibling.  Note that when creating an empty LiveFragment, one of
+the arguments may be null to create it at the beginning or end of its parentNode.
 
 DOM interface
 -------------
@@ -225,5 +224,4 @@ Plans
   LiveFragment methods)
 * Allow nested LiveFragments
 * More DOM interfaces
-* Easier constructor syntax
 
