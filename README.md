@@ -144,8 +144,7 @@ Caveats
   time.  Operations performed on one LiveFragment will not be seen by the other one.
 * Due to browser limitations (vendors, please fix that), LiveFragment methods do not
   throw actual DOMException instances, but you can still successfully use
-  `instanceof DOMException` or `.code === DOMException.NOT_FOUND_ERR` on those
-  exceptions.
+  `.code === DOMException.NOT_FOUND_ERR` on those exceptions.
 
 Additional helper methods
 -------------------------
