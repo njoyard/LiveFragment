@@ -270,6 +270,82 @@
 		
 		hasChildNodes: function() {
 			return this._childNodes.length > 0;
+		},
+		
+		/* Prepend node inside frament */
+		prepend: function(node) {
+			this.insertBefore(node, this.firstChild);
+		},
+		
+		/* Append node inside fragment */
+		append: function(node) {
+			this.appendChild(node);
+		},
+		
+		/* Insert node outside and before fragment */
+		before: function(node) {
+			var newPrevious;
+			
+			if (node.nodeType === DOCUMENT_FRAGMENT_NODE) {
+				newPrevious = node.lastChild;
+			} else {
+				newPrevious = node;
+			}
+			
+			this.parentNode.insertBefore(node, this.firstChild || this.nextSibling);
+			this._previousSibling = newPrevious;
+		},
+		
+		/* Insert node outside and after fragment */
+		after: function(node) {
+			var newNext;
+			
+			if (node.nodeType === DOCUMENT_FRAGMENT_NODE) {
+				newNext = node.firstChild;
+			} else {
+				newNext = node;
+			}
+			
+			this.parentNode.insertBefore(node, this.nextSibling);
+			this._nextSibling = newNext;
+		},
+		
+		/* Replace nodes in this fragment */
+		replace: function(node) {
+			var newChildren;
+			
+			if (node.nodeType === DOCUMENT_FRAGMENT_NODE) {
+				newChildren = [].slice.call(node.childNodes);
+			} else {
+				newChildren = [node];
+			}
+			
+			this.parentNode.insertBefore(node, this.nextSibling);
+			this.empty();
+			
+			this._childNodes = newChildren;
+		},
+		
+		/* Remove nodes in this fragment */
+		remove: function() {
+			this.empty();
+		},
+		
+		/* Check for child existence */
+		contains: function(node) {
+			var i, len;
+			
+			if (node === this) {
+				return true;
+			} else {
+				for (i = 0, len = this._childNodes.length; i < len; i++) {
+					if (this._childNodes[i].contains(node)) {
+						return true;
+					}
+				}
+			}
+			
+			return false;
 		}
 	};
 	
