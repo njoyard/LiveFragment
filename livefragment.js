@@ -1,5 +1,3 @@
-/*jshint es5:true */
-/*global DOMException */
 (function(global) {
 	"use strict";
 
